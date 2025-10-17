@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Pokémon API request script for Pikachu
+# This script fetches data from the Pokémon API and saves it to data.json
+# Errors are logged to errors.txt
+
+POKEMON_NAME="pikachu"
+API_URL="https://pokeapi.co/api/v2/pokemon/${POKEMON_NAME}"
+OUTPUT_FILE="data.json"
+ERROR_FILE="errors.txt"
+
+# Make the API request and save the response
+echo "Fetching data for ${POKEMON_NAME}..."
+
+# Use curl to make the request
+# -s: silent mode
+# -S: show errors
+# -f: fail silently on HTTP errors
+# -o: output to file
+if curl -sSf "${API_URL}" -o "${OUTPUT_FILE}" 2>"${ERROR_FILE}.tmp"; then
+    echo "Success! Data saved to ${OUTPUT_FILE}"
+    # Remove temporary error file if request succeeded
+    rm -f "${ERROR_FILE}.tmp"
+else
+    # If the request failed, log the error
+    echo "Error: Failed to fetch data for ${POKEMON_NAME}" | tee -a "${ERROR_FILE}"
+    echo "HTTP request failed at $(date)" >> "${ERROR_FILE}"
+    if [ -f "${ERROR_FILE}.tmp" ]; then
+        cat "${ERROR_FILE}.tmp" >> "${ERROR_FILE}"
+        rm -f "${ERROR_FILE}.tmp"
+    fi
+    exit 1
+fi
