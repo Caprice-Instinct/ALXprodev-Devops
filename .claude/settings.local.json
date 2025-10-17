@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(cat:*)",
-      "Bash(bash apiAutomation-0x00)"
+      "Bash(bash apiAutomation-0x00)",
+      "Bash(bash data_extraction_automation-0x01)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": []

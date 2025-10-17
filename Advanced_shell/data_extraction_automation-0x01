@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Script to extract Pokémon data from JSON file
+# Extracts name, height, weight, and type using jq, awk, and sed
+
+JSON_FILE="data.json"
+
+# Check if the JSON file exists
+if [ ! -f "$JSON_FILE" ]; then
+    echo "Error: $JSON_FILE not found!"
+    exit 1
+fi
+
+# Check if jq is available
+if ! command -v jq &> /dev/null; then
+    # Fallback to sed/awk/grep if jq is not available
+    # Extract the Pokémon name from forms field
+    name=$(grep -o '"forms":\[{"name":"[^"]*"' "$JSON_FILE" | sed 's/.*"name":"//;s/".*//g' | sed 's/^./\U&/')
+
+    # Extract height (in decimeters, convert to meters)
+    height=$(grep -o '"height":[0-9]*' "$JSON_FILE" | sed 's/"height"://g' | awk '{printf "%.1f", $1 / 10}')
+
+    # Extract weight (in hectograms, convert to kilograms)
+    weight=$(grep -o '"weight":[0-9]*' "$JSON_FILE" | sed 's/"weight"://g' | awk '{printf "%.0f", $1 / 10}')
+
+    # Extract the first type
+    type=$(grep -o '"types":\[{"slot":[0-9]*,"type":{"name":"[^"]*"' "$JSON_FILE" | sed 's/.*"name":"//;s/".*//g' | sed 's/^./\U&/')
+else
+    # Use jq if available
+    # Extract the Pokémon name
+    name=$(jq -r '.name' "$JSON_FILE" | sed 's/^./\u&/')
+
+    # Extract height (in decimeters, convert to meters)
+    height=$(jq -r '.height' "$JSON_FILE" | awk '{printf "%.1f", $1 / 10}')
+
+    # Extract weight (in hectograms, convert to kilograms)
+    weight=$(jq -r '.weight' "$JSON_FILE" | awk '{printf "%.0f", $1 / 10}')
+
+    # Extract the first type
+    type=$(jq -r '.types[0].type.name' "$JSON_FILE" | sed 's/^./\u&/')
+fi
+
+# Format and print the output
+echo "$name is of type $type, weighs ${weight}kg, and is ${height}m tall."
