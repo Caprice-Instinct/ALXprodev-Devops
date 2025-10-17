@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Parallel Pokémon Data Retrieval Script
+# Fetches data for multiple Pokémon in parallel using background processes
+
+# List of Pokémon to fetch
+POKEMON_LIST=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
+
+# Directory to store Pokémon data
+OUTPUT_DIR="pokemon_data"
+
+# Create output directory if it doesn't exist
+mkdir -p "$OUTPUT_DIR"
+
+# API base URL
+API_BASE="https://pokeapi.co/api/v2/pokemon"
+
+# Array to store background process PIDs
+declare -a PIDS
+
+# Function to fetch a single Pokémon
+fetch_pokemon() {
+    local pokemon=$1
+    local output_file="${OUTPUT_DIR}/${pokemon}.json"
+
+    echo "Fetching data for ${pokemon}..."
+
+    # Make the API request
+    if curl -sSf "${API_BASE}/${pokemon}" -o "$output_file" 2>/dev/null; then
+        echo "Saved data to ${output_file} ✅"
+    else
+        echo "Error: Failed to fetch ${pokemon} ❌"
+        echo "$(date): Failed to fetch ${pokemon}" >> errors.txt
+    fi
+}
+
+# Launch background processes for each Pokémon
+echo "Starting parallel data fetching..."
+for pokemon in "${POKEMON_LIST[@]}"; do
+    # Launch fetch in background
+    fetch_pokemon "$pokemon" &
+
+    # Store the PID of the background process
+    PIDS+=($!)
+done
+
+# Wait for all background processes to complete
+echo "Waiting for all fetch operations to complete..."
+for pid in "${PIDS[@]}"; do
+    wait "$pid"
+done
+
+echo "All fetch operations completed!"
+
+# Display summary
+echo ""
+echo "Summary:"
+total_files=$(ls -1 "$OUTPUT_DIR"/*.json 2>/dev/null | wc -l)
+echo "Total Pokémon data files: $total_files"
