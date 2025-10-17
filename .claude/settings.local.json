@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(bash apiAutomation-0x00)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
