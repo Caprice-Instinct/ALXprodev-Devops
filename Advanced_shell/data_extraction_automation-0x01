@@ -18,10 +18,10 @@ if ! command -v jq &> /dev/null; then
     name=$(grep -o '"forms":\[{"name":"[^"]*"' "$JSON_FILE" | sed 's/.*"name":"//;s/".*//g' | sed 's/^./\U&/')
 
     # Extract height (in decimeters, convert to meters)
-    height=$(grep -o '"height":[0-9]*' "$JSON_FILE" | sed 's/"height"://g' | awk '{printf "%.1f", $1 / 10}')
+    formatted_height=$(grep -o '"height":[0-9]*' "$JSON_FILE" | sed 's/"height"://g' | awk '{printf "%.1f", $1 / 10}')
 
     # Extract weight (in hectograms, convert to kilograms)
-    weight=$(grep -o '"weight":[0-9]*' "$JSON_FILE" | sed 's/"weight"://g' | awk '{printf "%.0f", $1 / 10}')
+    formatted_weight=$(grep -o '"weight":[0-9]*' "$JSON_FILE" | sed 's/"weight"://g' | awk '{printf "%.0f", $1 / 10}')
 
     # Extract the first type
     type=$(grep -o '"types":\[{"slot":[0-9]*,"type":{"name":"[^"]*"' "$JSON_FILE" | sed 's/.*"name":"//;s/".*//g' | sed 's/^./\U&/')
@@ -31,14 +31,14 @@ else
     name=$(jq -r '.name' "$JSON_FILE" | sed 's/^./\u&/')
 
     # Extract height (in decimeters, convert to meters)
-    height=$(jq -r '.height' "$JSON_FILE" | awk '{printf "%.1f", $1 / 10}')
+    formatted_height=$(jq -r '.height' "$JSON_FILE" | awk '{printf "%.1f", $1 / 10}')
 
     # Extract weight (in hectograms, convert to kilograms)
-    weight=$(jq -r '.weight' "$JSON_FILE" | awk '{printf "%.0f", $1 / 10}')
+    formatted_weight=$(jq -r '.weight' "$JSON_FILE" | awk '{printf "%.0f", $1 / 10}')
 
     # Extract the first type
     type=$(jq -r '.types[0].type.name' "$JSON_FILE" | sed 's/^./\u&/')
 fi
 
 # Format and print the output
-echo "$name is of type $type, weighs ${weight}kg, and is ${height}m tall."
+echo "$name is of type $type, weighs ${formatted_weight}kg, and is ${formatted_height}m tall."

@@ -34,6 +34,17 @@ fetch_pokemon() {
     fi
 }
 
+# Trap to handle cleanup on exit
+cleanup() {
+    echo "Cleaning up background processes..."
+    # Kill all background jobs if they're still running
+    jobs -p | xargs -r kill 2>/dev/null
+    wait
+}
+
+# Set up trap for cleanup
+trap cleanup EXIT INT TERM
+
 # Launch background processes for each Pokémon
 echo "Starting parallel data fetching..."
 for pokemon in "${POKEMON_LIST[@]}"; do
@@ -44,13 +55,27 @@ for pokemon in "${POKEMON_LIST[@]}"; do
     PIDS+=($!)
 done
 
+# Display running background jobs
+echo "Running background jobs: $(jobs | wc -l)"
+jobs
+
 # Wait for all background processes to complete
 echo "Waiting for all fetch operations to complete..."
 for pid in "${PIDS[@]}"; do
-    wait "$pid"
+    # Check if process is still running before waiting
+    if kill -0 "$pid" 2>/dev/null; then
+        wait "$pid"
+    fi
 done
 
 echo "All fetch operations completed!"
+
+# Verify no jobs are left running
+remaining_jobs=$(jobs -p | wc -l)
+if [ "$remaining_jobs" -gt 0 ]; then
+    echo "Warning: $remaining_jobs background jobs still running. Cleaning up..."
+    jobs -p | xargs -r kill 2>/dev/null
+fi
 
 # Display summary
 echo ""
